@@ -1,0 +1,25 @@
+[tool.ruff]
+#  ✦ 80–120 is fine; pick your style
+line-length = 100
+
+#  Files / dirs Ruff should ignore entirely
+exclude = [
+    "*.ipynb",          # Jupyter notebooks
+    ".venv", ".git",
+    "optimize/*.ipynb", # if any live there
+    "scripts/*.ipynb"
+]
+
+#  Rules to ignore everywhere
+#  (we keep common legacy offences out of CI noise)
+ignore = [
+    "E402",   # import not at top (common in notebooks)
+    "E701",   # multiple statements on one line
+    "E702",
+    "E722",   # bare except
+    "F401",   # unused import
+    "F821"    # undefined name (e.g. 'ls' in notebook)
+]
+
+#  Allow Ruff to automatically fix whatever it can
+fix = true
