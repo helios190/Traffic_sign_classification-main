@@ -1,25 +1,20 @@
-[tool.ruff]
-#  ✦ 80–120 is fine; pick your style
+# .ruff.toml  (root-level, tanpa [tool.ruff])
+
+# -- umum -----------------------------------------------------------------
 line-length = 100
+extend-exclude = [ "*.ipynb" ]   # abaikan semua notebook
 
-#  Files / dirs Ruff should ignore entirely
-exclude = [
-    "*.ipynb",          # Jupyter notebooks
-    ".venv", ".git",
-    "optimize/*.ipynb", # if any live there
-    "scripts/*.ipynb"
-]
-
-#  Rules to ignore everywhere
-#  (we keep common legacy offences out of CI noise)
+# -- lint rules -----------------------------------------------------------
+[lint]
 ignore = [
-    "E402",   # import not at top (common in notebooks)
-    "E701",   # multiple statements on one line
-    "E702",
-    "E722",   # bare except
-    "F401",   # unused import
-    "F821"    # undefined name (e.g. 'ls' in notebook)
+  "E402",  # import not at top (biasa di notebook)
+  "E701", "E702",  # multiple statements / same line
+  "E722",          # bare except
+  "F401",          # unused import
+  "F821"           # undefined name
 ]
+fix = true         # auto-fix yang bisa
 
-#  Allow Ruff to automatically fix whatever it can
-fix = true
+# (opsional) formatter behaviour
+[format]
+quote-style = "double"
