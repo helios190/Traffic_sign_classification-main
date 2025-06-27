@@ -22,16 +22,6 @@ jobs:
       - name: Install Ruff
         run: python -m pip install --quiet ruff
 
-      # ----- auto-format (will commit back on PR if you like) -----
-      - name: Ruff format (auto-fix)
-        run: ruff format .
-        # lint job only
-      - name: Ruff format (auto-fix)
-        run: ruff format .                 # pakai config otomatis dari .ruff.toml
-
-      - name: Ruff check
-        run: ruff check .                  # idem; config otomatis
-
 
 # ───── 2) Test job (needs lint) ──────────────────────────────
   test:
