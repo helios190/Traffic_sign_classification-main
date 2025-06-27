@@ -89,3 +89,24 @@ class Traffic:
 
         except Exception as e:
             return [{"ERROR": f"{e}"}]
+# --- append to the bottom of src/traffic.py -----------------
+# ──────────────────────────────────────────────────────────────
+# Convenience helper for unit-tests
+# ──────────────────────────────────────────────────────────────
+class _ModelWrapper:
+    """
+    Minimal wrapper agar test dapat memanggil:
+        mdl = traffic.load()
+        mdl.predict(x)
+    """
+    def __init__(self):
+        self._m = _get_model()
+
+    def predict(self, x):
+        return self._m.predict(x, verbose=0)
+
+
+def load():
+    """Return an object with .predict() exactly as expected by tests."""
+    return _ModelWrapper()
+
