@@ -60,9 +60,14 @@ requests
 send2trash
 six
 tensorboard
-tensorflow-cpu==2.16.1 ; sys_platform != "darwin"
-tensorflow-macos==2.16.1 ; sys_platform == "darwin"
-tensorflow-metal==1.2.0 ; sys_platform == "darwin"
+# Linux (GitHub runner)
+tensorflow-cpu==2.13.1 ; sys_platform != "darwin"
+# macOS Apple Silicon
+tensorflow-macos==2.13.1 ; sys_platform == "darwin"
+tensorflow-metal==1.0.0  ; sys_platform == "darwin"
+# remove tflite-runtime pin (2.14 wheels are built for TF 2.14+ only)
+tflite-runtime==2.13.0 ; platform_system == "Linux" and python_version < "3.11"
+
 tensorflow-estimator
 termcolor
 terminado
@@ -76,7 +81,6 @@ werkzeug
 widgetsnbextension
 wrapt
 zipp
-tflite-runtime==2.14.0 ; platform_system == "Linux" and python_version < "3.11"
 onnxruntime>=1.18,<2
 pytest==8.2.0
 ruff==0.4.5
