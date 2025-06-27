@@ -1,13 +1,28 @@
-FROM python:3.11-slim AS builder
-WORKDIR /app
+##########################
+# 1️⃣  Build wheels once  #
+##########################
+FROM python:3.10-slim AS builder
+WORKDIR /tmp
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip wheel -r requirements.txt -w /wheels
+RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
-FROM python:3.11-slim
+##########################
+# 2️⃣  Runtime image      #
+##########################
+FROM python:3.10-slim
 WORKDIR /app
+
+# copy wheels & requirements first
 COPY --from=builder /wheels /wheels
-RUN pip install --no-index --find-links=/wheels -r /app/requirements.txt
+COPY requirements.txt .
+
+# install from local wheelhouse
+RUN pip install --no-index --find-links=/wheels -r requirements.txt
+
+# now bring in the rest of the source code
 COPY . .
-ENV PYTHONUNBUFFERED=1 ARTEFACT_PATH=models/Traffic.h5
-EXPOSE 8000
-CMD ["python", "clientApp.py"]        # ganti gunicorn kalau sudah ada
+
+ENV PYTHONUNBUFFERED=1 \
+    ARTEFACT_PATH=models/Traffic.h5
+
+CMD ["python", "clientApp.py"]
