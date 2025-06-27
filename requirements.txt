@@ -41,7 +41,7 @@ more-itertools
 nbconvert
 nbformat
 notebook
-numpy>=1.26,<2
+numpy~=1.23.5 
 opencv-python-headless>=4.10,<5
 pandocfilters
 parso
@@ -60,14 +60,10 @@ requests
 send2trash
 six
 tensorboard
-# Linux (GitHub runner)
 tensorflow-cpu==2.13.1 ; sys_platform != "darwin"
-# macOS Apple Silicon
 tensorflow-macos==2.13.1 ; sys_platform == "darwin"
 tensorflow-metal==1.0.0  ; sys_platform == "darwin"
-# remove tflite-runtime pin (2.14 wheels are built for TF 2.14+ only)
 tflite-runtime==2.13.0 ; platform_system == "Linux" and python_version < "3.11"
-
 tensorflow-estimator
 termcolor
 terminado
