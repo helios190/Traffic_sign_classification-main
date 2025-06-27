@@ -6,9 +6,6 @@ import cv2
 import tensorflow as tf
 from PIL import Image
 
-# ---------------------------------------------------------------------
-# 1. Muat model sekali saja (singleton)
-# ---------------------------------------------------------------------
 _MODEL = None
 def _get_model():
     global _MODEL
@@ -16,9 +13,7 @@ def _get_model():
         _MODEL = tf.keras.models.load_model("Traffic.h5", compile=False)
     return _MODEL
 
-# ---------------------------------------------------------------------
-# 2. Label list (index 0-42)
-# ---------------------------------------------------------------------
+
 LABELS: List[str] = [
     "Speed limit (20km/h)",                # 0
     "Speed limit (30km/h)",                # 1
