@@ -29,7 +29,7 @@ RUN pip install --no-index --find-links=/wheels -r requirements.txt
 COPY . .
 
 ENV PYTHONUNBUFFERED=1 \
-    ARTEFACT_PATH=Traffic.h5
+    ARTEFACT_PATH=models/v2025-06-27/model_int8.tflite
 
 EXPOSE 8080
 CMD ["uvicorn", "src.wrapper:app", "--host", "0.0.0.0", "--port", "8080"]
