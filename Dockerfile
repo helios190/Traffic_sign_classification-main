@@ -20,7 +20,7 @@ RUN pip install --no-index --find-links=/wheels -r requirements.txt
 COPY . .
 
 ENV PYTHONUNBUFFERED=1 \
-    ARTEFACT_PATH=models/Traffic.h5
+    ARTEFACT_PATH=Traffic.h5
 
 EXPOSE 8080
 CMD ["uvicorn", "src.wrapper:app", "--host", "0.0.0.0", "--port", "8080"]
