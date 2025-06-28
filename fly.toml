@@ -5,7 +5,7 @@ primary_region = 'sin'
   image = 'ghcr.io/helios190/traffic_sign_classification-main:latest'
 
 [env]
-  ARTEFACT_PATH = './models/v2025-06-27/model_int8.tflite'
+  ARTEFACT_PATH = "models/v2025-06-27/model_int8.tflite"
   PYTHONUNBUFFERED = '1'
 
 [http_service]

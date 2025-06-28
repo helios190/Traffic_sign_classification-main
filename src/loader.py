@@ -1,8 +1,15 @@
 from pathlib import Path
 import numpy as np
-import tensorflow as tf
-try: import onnxruntime as ort
-except ImportError: ort=None
+
+# Prefer the lightweight TFLite runtime if it’s installed
+try:
+    from tflite_runtime.interpreter import Interpreter
+    TF_LITE = True
+except ImportError:
+    import tensorflow as tf
+    Interpreter = tf.lite.Interpreter
+    TF_LITE = False
+
 
 
 class ModelLoader:
