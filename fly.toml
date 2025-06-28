@@ -1,13 +1,17 @@
-# fly.toml app configuration file generated for traffic-sign-api-wild-snow-3229 on 2025-06-28T17:14:22+07:00
+# fly.toml app configuration file generated for traffic-sign-api on 2025-06-28T17:57:42+07:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'traffic-sign-api-wild-snow-3229'
+app = 'traffic-sign-api'
 primary_region = 'sin'
 
 [build]
   image = 'ghcr.io/helios190/traffic_sign_classification-main:latest'
+
+[env]
+  ARTEFACT_PATH = 'Traffic.h5'
+  PYTHONUNBUFFERED = '1'
 
 [http_service]
   internal_port = 8080
