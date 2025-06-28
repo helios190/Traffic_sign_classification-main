@@ -1,24 +1,17 @@
-name: Deploy · fly
+name: Deploy to Fly
 
 on:
   workflow_run:
-    workflows: ["CI · lint · test · docker"]
-    types: [completed]
-    branches: [main]
+    workflows: [ "CI · lint · test · docker" ]
+    types: [ completed ]
+    branches: [ main ]
 
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Install flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@v1
-
-      - name: Deploy to Fly.io
+      - uses: superfly/flyctl-actions/setup-flyctl@v1
+      - run: flyctl deploy --app traffic-sign-api --image ghcr.io/${{ github.repository }}:latest
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          flyctl deploy \
-            --app traffic-sign-api \
-            --image ghcr.io/${{ github.repository }}:latest \
-            --config fly.toml
