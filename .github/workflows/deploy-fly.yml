@@ -1,35 +1,45 @@
+# .github/workflows/deploy.yml
 name: Deploy to Fly
 
 on:
   workflow_run:
-    workflows: [ "CI · lint · test · docker" ]
-    types: [ completed ]
-    branches: [ main ]
+    workflows: ["CI · lint · test · docker"]
+    types:   [completed]
 
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
-    env:
-      # this one lets flyctl authenticate with Fly.io
-      FLY_API_TOKEN:    ${{ secrets.FLY_API_TOKEN }}
-      # these two let flyctl pull your private GHCR image
-      REGISTRY_USERNAME: ${{ github.actor }}
-      REGISTRY_PASSWORD: ${{ secrets.GHCR_TOKEN }}
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Fly CLI
+      - uses: actions/checkout@v4
+      - name: Install flyctl
         uses: superfly/flyctl-actions/setup-flyctl@v1
 
-      - name: Deploy to Fly
+      # → template your fly.toml with the GHCR creds
+      - name: Write fly.toml
         run: |
-          flyctl deploy \
-            --app traffic-sign-api \
-            --image ghcr.io/${{ github.repository }}:latest \
-            --remote-only \
-            --registry-username "$REGISTRY_USERNAME" \
-            --registry-password "$REGISTRY_PASSWORD"
+          cat > fly.toml <<EOF
+          app = "traffic-sign-api"
+          primary_region = "sin"
+
+          [build]
+            image = "ghcr.io/${{ github.repository }}:latest"
+
+          [registry]
+            username = "${{ github.actor }}"
+            password = "${{ secrets.GHCR_TOKEN }}"
+
+          [env]
+            ARTEFACT_PATH    = "Traffic.h5"
+            PYTHONUNBUFFERED = "1"
+
+          [http_service]
+            internal_port = 8080
+            force_https   = true
+          EOF
+
+      # → now deploy
+      - name: Deploy
+        run: flyctl deploy --config fly.toml --app traffic-sign-api
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
