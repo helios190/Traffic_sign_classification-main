@@ -12,7 +12,8 @@ from .loader import ModelLoader            # <— your universal loader
 from .traffic import LABELS                # mapping 0-42 ➜ human label
 
 # ─────────────────── init ──────────────────────────────────────────────
-ARTEFACT = "./models/v2025-06-27/model_int8.tflite"
+ARTEFACT = "Traffic.h5"
+#Traffic.h5
 
 _loader = ModelLoader(ARTEFACT)            # load once at import
 print(f"[wrapper] loaded {ARTEFACT} via {_loader.backend}")

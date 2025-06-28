@@ -9,7 +9,6 @@ class ModelLoader:
     def __init__(self, artefact: str | Path):
         self.path = Path(artefact)
         self.backend, self.obj = self._load()
-
     # ─────────────────────────────
     def _load(self):
         if self.path.suffix == ".h5":
