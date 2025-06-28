@@ -14,7 +14,7 @@ from .loader import ModelLoader   # your universal loader
 from .traffic import LABELS       # 43 human-readable labels
 
 #────────────────────── Config ─────────────────────────────
-ART_PATH = Path(os.environ.get("ARTEFACT_PATH", "Traffic.h5"))
+ART_PATH = "./models/v2025-06-27/model_int8.tflite"
 
 # we’ll keep the loader in this module var, but *don’t* load on import
 _loader: ModelLoader | None = None
