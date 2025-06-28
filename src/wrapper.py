@@ -1,8 +1,8 @@
 # src/wrapper.py
 from fastapi import FastAPI
-import UploadFile
-import File
-import HTTPException
+from fastapi import UploadFile
+from fastapi import File
+from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import os
