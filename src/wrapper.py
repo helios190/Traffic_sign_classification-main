@@ -5,7 +5,10 @@ import File
 import HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import os, time, numpy as np, cv2
+import os
+import time
+import numpy as np
+import cv2
 from pathlib import Path
 from .loader import ModelLoader
 from .traffic import LABELS
