@@ -1,4 +1,9 @@
-import time, numpy as np, json, pathlib, tensorflow as tf, onnxruntime as ort
+import time
+import numpy as np
+import json
+import pathlib
+import tensorflow as tf
+import onnxruntime as ort
 from src.loader import ModelLoader
 IMG = np.random.rand(1,30,30,3).astype("float32")
 

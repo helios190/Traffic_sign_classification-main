@@ -1,4 +1,7 @@
-import numpy as np, pandas as pd, cv2, tensorflow as tf
+import numpy as np
+import pandas as pd
+import cv2
+import tensorflow as tf
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score
 from src.model import load, preprocess

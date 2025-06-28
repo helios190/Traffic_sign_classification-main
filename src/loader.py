@@ -1,6 +1,6 @@
 from pathlib import Path
-import numpy as np, tensorflow as tf
-
+import numpy as np
+import tensorflow as tf
 try: import onnxruntime as ort
 except ImportError: ort=None
 

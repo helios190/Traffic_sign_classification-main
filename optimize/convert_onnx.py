@@ -1,5 +1,7 @@
 # optimize/convert_onnx.py
-import subprocess, pathlib, sys
+import subprocess
+import pathlib
+import sys
 
 VER = "v2025-06-27"
 sm_dir   = f"models/{VER}/savedmodel"

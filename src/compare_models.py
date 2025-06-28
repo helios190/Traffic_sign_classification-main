@@ -1,14 +1,12 @@
-"""
-Bandingkan baseline.h5, model_int8.tflite, model_fp16.onnx
-Menampilkan 1 baris per gambar: prediksi dan latensi tiap artefak.
-
-jalankan:
-    python -m src.compare_models --ver v2025-06-27 --test-dir test/
-"""
 
 from __future__ import annotations
-import argparse, pathlib, time, json, sys
-import numpy as np, cv2
+import argparse
+import pathlib
+import time
+import json
+import sys
+import numpy as np
+import cv2
 from .loader import ModelLoader
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]

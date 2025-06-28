@@ -1,4 +1,6 @@
-import io, numpy as np, cv2
+import io
+import numpy as np
+import cv2
 from fastapi.testclient import TestClient
 from src.wrapper import app               # ← import the FastAPI app
 
