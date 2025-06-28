@@ -9,11 +9,11 @@ jalankan:
 from __future__ import annotations
 import argparse, pathlib, time, json, sys
 import numpy as np, cv2
-from .loader import ModelLoader           # loader universal
+from .loader import ModelLoader
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-LABELS = [  # ringkas; lengkapi sesuai 43 kelas
+LABELS = [
     "Speed 20","Speed 30","Speed 50","Speed 60","Speed 70","Speed 80","End 80",
     "Speed 100","Speed 120","No passing", "No passing 3.5t", "Right-of-way",
     "Priority", "Yield", "Stop", "No vehicles", "No >3.5t", "No entry",

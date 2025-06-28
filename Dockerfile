@@ -1,6 +1,3 @@
-##########################
-# 1️⃣  Build wheels once  #
-##########################
 FROM python:3.10-slim AS builder
 WORKDIR /tmp
 COPY requirements.txt .
@@ -25,4 +22,5 @@ COPY . .
 ENV PYTHONUNBUFFERED=1 \
     ARTEFACT_PATH=models/Traffic.h5
 
-CMD ["python", "clientApp.py"]
+EXPOSE 8080
+CMD ["uvicorn", "src.wrapper:app", "--host", "0.0.0.0", "--port", "8080"]

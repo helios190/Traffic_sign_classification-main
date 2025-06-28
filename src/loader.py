@@ -3,8 +3,7 @@ import numpy as np, tensorflow as tf
 
 try: import onnxruntime as ort
 except ImportError: ort=None
-try: import tensorrt as trt, pycuda.driver as cuda, pycuda.autoinit
-except ImportError: trt=None
+
 
 class ModelLoader:
     def __init__(self, artefact: str | Path):
@@ -20,21 +19,6 @@ class ModelLoader:
         if self.path.suffix == ".tflite":
             itp = tf.lite.Interpreter(model_path=str(self.path)); itp.allocate_tensors()
             return "tflite", itp
-        if self.path.suffix == ".onnx":
-            assert ort, "pip install onnxruntime"
-            return "onnx", ort.InferenceSession(str(self.path), providers=["CPUExecutionProvider"])
-        if self.path.suffix == ".plan":
-            assert trt, "install TensorRT & pycuda"
-            return "trt", self._load_trt()
-        raise ValueError("format tidak didukung")
-
-    def _load_trt(self):
-        engine = trt.Runtime(trt.Logger.WARNING).deserialize_cuda_engine(self.path.read_bytes())
-        ctx = engine.create_execution_context()
-        d_in  = cuda.mem_alloc(trt.volume(engine.get_binding_shape(0))*4)
-        d_out = cuda.mem_alloc(trt.volume(engine.get_binding_shape(1))*4)
-        stream = cuda.Stream()
-        return (engine, ctx, d_in, d_out, stream)
 
     # ─────────────────────────────
     def predict_logits(self, arr: np.ndarray):
@@ -42,21 +26,39 @@ class ModelLoader:
             return self.obj.predict(arr, verbose=0)
         if self.backend=="saved":
             fn=self.obj.signatures["serving_default"]; return fn(tf.constant(arr))["output_0"].numpy()
-        if self.backend=="tflite":
-            runner=self.obj.get_signature_runner(); return runner(features=arr)["output_0"]
-        if self.backend=="onnx":
-            return self.obj.run(None, {"input": arr.astype("float32")})[0]
-        if self.backend=="trt":
-            return self._run_trt(arr)
-        raise RuntimeError("backend unknown")
+# ─ inside predict_logits() ───────────────────────────────────────────
+        if self.backend == "tflite":
+            interp   = self.obj
+            sig_map  = interp.get_signature_list()
 
-    def _run_trt(self, arr: np.ndarray):
-        engine, ctx, d_in, d_out, stream = self.obj
-        import pycuda.driver as cuda, numpy as np
-        h_in = arr.astype(np.float32).ravel()
-        h_out = np.empty(ctx.get_binding_shape(1), dtype=np.float32)
-        cuda.memcpy_htod_async(d_in, h_in, stream)
-        ctx.execute_async_v2([int(d_in), int(d_out)], stream.handle)
-        cuda.memcpy_dtoh_async(h_out, d_out, stream)
-        stream.synchronize()
-        return h_out.reshape(1, -1)
+            def _maybe_quantize(a: np.ndarray, dtype):
+                """Jika interpreter butuh uint8 → ubah 0-1 float ke 0-255 uint8."""
+                if dtype == np.uint8:
+                    return (a * 255).astype("uint8")
+                return a.astype("float32")
+
+            def _first_name(container):
+                """Return first tensor name from dict | list | tuple."""
+                if isinstance(container, dict):
+                    return next(iter(container.values()))
+                if isinstance(container, (list, tuple)):
+                    return container[0]
+                raise TypeError("Unknown Signature I/O type")
+
+            if isinstance(sig_map, dict) and sig_map:
+                sig_key  = next(iter(sig_map))
+                runner   = interp.get_signature_runner(sig_key)
+                in_name  = _first_name(sig_map[sig_key]["inputs"])
+                out_name = _first_name(sig_map[sig_key]["outputs"])
+                in_dtype = interp.get_input_details()[0]["dtype"]
+                return runner(**{in_name: _maybe_quantize(arr, in_dtype)})[out_name]
+            else:
+                # fallback pakai tensor-index
+                in_info = interp.get_input_details()[0]
+                out_idx = interp.get_output_details()[0]["index"]
+                interp.set_tensor(
+                    in_info["index"], _maybe_quantize(arr, in_info["dtype"])
+                )
+                interp.invoke()
+                return interp.get_tensor(out_idx)
+        raise RuntimeError("backend unknown")

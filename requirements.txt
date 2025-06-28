@@ -1,3 +1,35 @@
+# ───────── Core ML runtime ───────────────────────────────────────────
+numpy~=1.23.5
+
+tensorflow-cpu==2.13.1           ; sys_platform != "darwin"
+tensorflow-macos==2.13.1         ; sys_platform == "darwin"
+tensorflow-metal==1.0.0          ; sys_platform == "darwin"
+tensorflow-estimator
+
+tflite-runtime==2.13.0           ; platform_system == "Linux" and python_version < "3.11"
+
+# tf2onnx v1.16 needs onnx >=1.4.1, but **not** 1.18
+onnx==1.14.1                     # protobuf 3.x, typing-ext <4.6 ok
+onnxruntime==1.17.3              # dernier runtime yg cocok protobuf3
+tf2onnx==1.16.1
+
+# helper libs required by TF-2.13PY
+protobuf==3.20.3                 # <4 (TF & ORT happy)
+typing-extensions==4.5.0         # <4.6 (TF happy)
+
+# ───────── API layer ────────────────────────────────────────────────
+fastapi<0.110                    # masih Pydantic 1, cocok typing-ext 4.5
+pydantic<2
+uvicorn[standard]>=0.29
+python-multipart                 # file upload parsing
+
+# ───────── vision / general ─────────────────────────────────────────
+opencv-python-headless>=4.10,<5
+pillow>=10,<11
+scikit-learn==1.5.0
+pandas==2.2.2
+
+# ───────── misc (unchanged) ─────────────────────────────────────────
 absl-py
 astor
 attrs
@@ -41,15 +73,11 @@ more-itertools
 nbconvert
 nbformat
 notebook
-numpy~=1.23.5 
-opencv-python-headless>=4.10,<5
 pandocfilters
 parso
 pickleshare
-pillow>=10,<11
 prometheus-client
 prompt-toolkit
-protobuf>=4,<5
 pygments
 pyparsing
 pyrsistent
@@ -60,11 +88,6 @@ requests
 send2trash
 six
 tensorboard
-tensorflow-cpu==2.13.1 ; sys_platform != "darwin"
-tensorflow-macos==2.13.1 ; sys_platform == "darwin"
-tensorflow-metal==1.0.0  ; sys_platform == "darwin"
-tflite-runtime==2.13.0 ; platform_system == "Linux" and python_version < "3.11"
-tensorflow-estimator
 termcolor
 terminado
 testpath
@@ -77,8 +100,7 @@ werkzeug
 widgetsnbextension
 wrapt
 zipp
-onnxruntime>=1.18,<2
+
+# ───────── dev / ci ─────────────────────────────────────────────────
 pytest==8.2.0
 ruff==0.4.5
-scikit-learn==1.5.0
-pandas==2.2.2
