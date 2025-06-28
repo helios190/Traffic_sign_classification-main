@@ -1,4 +1,3 @@
-# src/wrapper.py
 from __future__ import annotations
 import os
 import time
@@ -14,7 +13,8 @@ from .loader import ModelLoader   # your universal loader
 from .traffic import LABELS       # 43 human-readable labels
 
 #────────────────────── Config ─────────────────────────────
-ART_PATH = "./models/v2025-06-27/model_int8.tflite"
+# Point directly at your TFLite file (adjust relative path if needed)
+ART_PATH = Path(__file__).resolve().parent.parent / "models/v2025-06-27/model_int8.tflite"
 
 # we’ll keep the loader in this module var, but *don’t* load on import
 _loader: ModelLoader | None = None
@@ -41,8 +41,8 @@ def _preprocess(content: bytes) -> np.ndarray:
 
 def _get_loader() -> ModelLoader | None:
     global _loader
+    # only load once, and only if the file exists
     if _loader is None and ART_PATH.exists():
-        # only load the real model if the artifact file is there
         _loader = ModelLoader(ART_PATH)
         print(f"[wrapper] loaded {ART_PATH.name} via {_loader.backend}")
     return _loader
@@ -55,16 +55,14 @@ async def predict(file: UploadFile = File(...)):
         data = await file.read()
         x = _preprocess(data)
     except Exception as e:
-        # invalid image → 400 with our detail
         raise HTTPException(status_code=400, detail=str(e))
 
-    # 2) inference (real or dummy) + timing
+    # 2) inference + timing
     t0 = time.time()
     loader = _get_loader()
-    if loader is not None:
+    if loader:
         logits = loader.predict_logits(x)
     else:
-        # no model on disk: return a zero-vector so class_id==0
         logits = np.zeros((1, len(LABELS)), dtype="float32")
     latency_ms = (time.time() - t0) * 1e3
 
@@ -75,7 +73,6 @@ async def predict(file: UploadFile = File(...)):
         class_id=cls,
         latency_ms=round(latency_ms, 2),
     )
-
     return JSONResponse(resp.dict())
 
 
@@ -101,3 +98,4 @@ if __name__ == "__main__":
         port=port,
         log_level="info",
     )
+
