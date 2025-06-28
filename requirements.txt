@@ -106,3 +106,6 @@ pytest==8.2.0
 ruff==0.4.5
 
 httpx==0.24.1
+UploadFile
+File
+HTTPException
