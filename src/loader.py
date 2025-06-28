@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 
-# Prefer the lightweight TFLite runtime if it’s installed
+# Attempt to use the lightweight TFLite runtime; fall back to full TF if needed
 try:
     from tflite_runtime.interpreter import Interpreter
     TF_LITE = True
@@ -11,60 +11,60 @@ except ImportError:
     TF_LITE = False
 
 
-
 class ModelLoader:
+    """
+    Universal loader for Keras (.h5), SavedModel dir, or TFLite (.tflite).
+    """
     def __init__(self, artefact: str | Path):
         self.path = Path(artefact)
         self.backend, self.obj = self._load()
-    # ─────────────────────────────
+
     def _load(self):
+        # Keras model (.h5)
         if self.path.suffix == ".h5":
+            # full TF must be available
             return "keras", tf.keras.models.load_model(self.path, compile=False)
+
+        # TensorFlow SavedModel directory
         if self.path.is_dir():
             return "saved", tf.saved_model.load(str(self.path))
+
+        # TFLite flatbuffer (.tflite)
         if self.path.suffix == ".tflite":
-            itp = tf.lite.Interpreter(model_path=str(self.path)); itp.allocate_tensors()
-            return "tflite", itp
+            interpreter = Interpreter(model_path=str(self.path))
+            interpreter.allocate_tensors()
+            return "tflite", interpreter
 
-    # ─────────────────────────────
-    def predict_logits(self, arr: np.ndarray):
-        if self.backend=="keras":
+        raise RuntimeError(f"Unsupported artefact type: {self.path}")
+
+    def predict_logits(self, arr: np.ndarray) -> np.ndarray:
+        # Keras inference
+        if self.backend == "keras":
             return self.obj.predict(arr, verbose=0)
-        if self.backend=="saved":
-            fn=self.obj.signatures["serving_default"]; return fn(tf.constant(arr))["output_0"].numpy()
-# ─ inside predict_logits() ───────────────────────────────────────────
+
+        # SavedModel inference via signature
+        if self.backend == "saved":
+            fn = self.obj.signatures.get("serving_default")
+            if fn is None:
+                raise RuntimeError("SavedModel missing 'serving_default' signature")
+            out = fn(tf.constant(arr))
+            # assume output key is 'output_0' or first
+            key = next(iter(out))
+            return out[key].numpy()
+
+        # TFLite inference
         if self.backend == "tflite":
-            interp   = self.obj
-            sig_map  = interp.get_signature_list()
+            interp = self.obj
+            details_in = interp.get_input_details()[0]
+            details_out = interp.get_output_details()[0]
 
-            def _maybe_quantize(a: np.ndarray, dtype):
-                """Jika interpreter butuh uint8 → ubah 0-1 float ke 0-255 uint8."""
-                if dtype == np.uint8:
-                    return (a * 255).astype("uint8")
-                return a.astype("float32")
+            # handle uint8 quantized models
+            data = arr.astype("float32")
+            if details_in["dtype"] == np.uint8:
+                data = (data * 255).astype(np.uint8)
 
-            def _first_name(container):
-                """Return first tensor name from dict | list | tuple."""
-                if isinstance(container, dict):
-                    return next(iter(container.values()))
-                if isinstance(container, (list, tuple)):
-                    return container[0]
-                raise TypeError("Unknown Signature I/O type")
+            interp.set_tensor(details_in["index"], data)
+            interp.invoke()
+            return interp.get_tensor(details_out["index"])
 
-            if isinstance(sig_map, dict) and sig_map:
-                sig_key  = next(iter(sig_map))
-                runner   = interp.get_signature_runner(sig_key)
-                in_name  = _first_name(sig_map[sig_key]["inputs"])
-                out_name = _first_name(sig_map[sig_key]["outputs"])
-                in_dtype = interp.get_input_details()[0]["dtype"]
-                return runner(**{in_name: _maybe_quantize(arr, in_dtype)})[out_name]
-            else:
-                # fallback pakai tensor-index
-                in_info = interp.get_input_details()[0]
-                out_idx = interp.get_output_details()[0]["index"]
-                interp.set_tensor(
-                    in_info["index"], _maybe_quantize(arr, in_info["dtype"])
-                )
-                interp.invoke()
-                return interp.get_tensor(out_idx)
-        raise RuntimeError("backend unknown")
+        raise RuntimeError(f"Unknown backend: {self.backend}")
