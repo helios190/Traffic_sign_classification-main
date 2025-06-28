@@ -1,81 +1,75 @@
-# .github/workflows/ci-docker.yml
 name: CI · lint · test · docker
 
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
 
-# ───── 1) Lint job ───────────────────────────────────────────
-# snippet — only the lint job part
 jobs:
+# ───── 1) LINT ───────────────────────────────────────────────
   lint:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
+      - run: python -m pip install --quiet ruff
+      - run: ruff check .
 
-      - name: Install Ruff
-        run: python -m pip install --quiet ruff
-
-
-# ───── 2) Test job (needs lint) ──────────────────────────────
+# ───── 2) TEST ───────────────────────────────────────────────
   test:
     needs: lint
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
+        with: {python-version: "3.11"}
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: >-
-            pip-${{ hashFiles('requirements.txt') }}-${{ runner.os }}-${{
-            github.run_id }}
-      - name: Install deps & pytest
-        run: |
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+      - run: |
           python -m pip install --quiet -r requirements.txt pytest
-      - name: Run tests
-        run: pytest -q
+          pytest -q
 
-# ───── 3) Build & push Docker (only on main) ────────────────
+# ───── 3) BUILD & PUSH DOCKER (hanya di main) ───────────────
   docker:
     needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
 
-      # ① compute lower-case repo once
-      - id: prep
-        run: |
-          echo "repo_lower=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      # ▸ builder qemu + buildx → enable multi-arch
+      - uses: docker/setup-qemu-action@v3          # emulasi arm64 di runner x86
+      - uses: docker/setup-buildx-action@v3
 
-      # ② login (PAT or GITHUB_TOKEN with packages:write)
+      # ▸ login ke GHCR (pakai secret GHCR_TOKEN atau GITHUB_TOKEN)
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
-      # ③ build & push
-      - uses: docker/setup-buildx-action@v3
-        with: {driver: docker-container}
+      # ▸ nama repo lower-case
+      - id: prep
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
 
+      # ▸ build + push manifest linux/amd64 & linux/arm64
       - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64          # ★ multi-arch
           tags: |
-            ${{ env.REGISTRY }}/${{ steps.prep.outputs.repo_lower }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ steps.prep.outputs.repo_lower }}:latest
-
+            ${{ env.REGISTRY }}/${{ steps.prep.outputs.repo }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ steps.prep.outputs.repo }}:latest
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
