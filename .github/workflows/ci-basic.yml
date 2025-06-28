@@ -1,39 +1,47 @@
+# .github/workflows/ci-docker.yml
 name: CI · lint · test · docker
 
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [ main ]
 
 env:
   REGISTRY: ghcr.io
 
+# ───── 1) Lint job ───────────────────────────────────────────
+# snippet — only the lint job part
 jobs:
-# ───── 1) LINT ───────────────────────────────────────────────
   lint:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - run: python -m pip install --quiet ruff
-      - run: ruff check .
 
-# ───── 2) TEST ───────────────────────────────────────────────
+      - name: Install Ruff
+        run: python -m pip install --quiet ruff
+
+
+# ───── 2) Test job (needs lint) ──────────────────────────────
   test:
     needs: lint
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
+        with: {python-version: '3.11'}
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - run: |
+          key: >-
+            pip-${{ hashFiles('requirements.txt') }}-${{ runner.os }}-${{
+            github.run_id }}
+      - name: Install deps & pytest
+        run: |
           python -m pip install --quiet -r requirements.txt pytest
-          pytest -q
+      - name: Run tests
+        run: pytest -q
 
 # ───── 3) BUILD & PUSH DOCKER (hanya di main) ───────────────
   docker:
