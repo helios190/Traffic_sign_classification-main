@@ -3,7 +3,7 @@ name: Deploy to Fly
 on:
   workflow_run:
     workflows: [ "CI · lint · test · docker" ]
-    types:   [ completed ]
+    types: [ completed ]
     branches: [ main ]
 
 jobs:
@@ -11,20 +11,19 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
-    # make your Fly token available to flyctl
+    # Expose your secret under the name Fly’s CLI looks for:
     env:
-      FLYCTL_ACCESS_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
     steps:
-      # 1) checkout so we have fly.toml in the workspace
-      - name: Checkout
-        uses: actions/checkout@v4
+      # 1) Grab your code (so fly.toml lives here)
+      - uses: actions/checkout@v4
 
-      # 2) install flyctl
+      # 2) Install the Fly CLI
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@v1
 
-      # 3) deploy your already-pushed GHCR image
+      # 3) Deploy your already-built GHCR image
       - name: Deploy to Fly
         run: |
           flyctl deploy \
