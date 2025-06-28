@@ -1,20 +1,4 @@
-from pathlib import Path
-from typing import List, Dict
-
-import numpy as np
-import cv2
-import tensorflow as tf
-from PIL import Image
-
-_MODEL = None
-def _get_model():
-    global _MODEL
-    if _MODEL is None:
-        _MODEL = tf.keras.models.load_model("Traffic.h5", compile=False)
-    return _MODEL
-
-
-LABELS: List[str] = [
+LABELS = [
     "Speed limit (20km/h)",                # 0
     "Speed limit (30km/h)",                # 1
     "Speed limit (50km/h)",                # 2
@@ -59,54 +43,4 @@ LABELS: List[str] = [
     "End of no passing",                   # 41
     "End of no passing > 3.5 t",           # 42
 ]
-
-# ---------------------------------------------------------------------
-# 3. Kelas wrapper – kompatibel dgn versi Anda
-# ---------------------------------------------------------------------
-class Traffic:
-    def __init__(self, filename: str | Path):
-        self.filename = str(filename)
-
-    def trafficsign(self) -> List[Dict[str, str]]:
-        """Return [{"image": <predicted_label>}] or [{"ERROR": …}]"""
-        try:
-            # -------- load & preprocess image --------
-            img_bgr = cv2.imread(self.filename)
-            if img_bgr is None:
-                raise FileNotFoundError(self.filename)
-
-            img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-            img_pil = Image.fromarray(img_rgb).resize((30, 30))
-            arr     = (np.asarray(img_pil, dtype="float32") / 255.0)[None, ...]
-
-            # -------- inference --------
-            model   = _get_model()
-            pred_id = int(np.argmax(model.predict(arr, verbose=0), axis=1)[0])
-
-            # -------- map to label --------
-            label = LABELS[pred_id]
-            return [{"image": label}]
-
-        except Exception as e:
-            return [{"ERROR": f"{e}"}]
-# --- append to the bottom of src/traffic.py -----------------
-# ──────────────────────────────────────────────────────────────
-# Convenience helper for unit-tests
-# ──────────────────────────────────────────────────────────────
-class _ModelWrapper:
-    """
-    Minimal wrapper agar test dapat memanggil:
-        mdl = traffic.load()
-        mdl.predict(x)
-    """
-    def __init__(self):
-        self._m = _get_model()
-
-    def predict(self, x):
-        return self._m.predict(x, verbose=0)
-
-
-def load():
-    """Return an object with .predict() exactly as expected by tests."""
-    return _ModelWrapper()
 
