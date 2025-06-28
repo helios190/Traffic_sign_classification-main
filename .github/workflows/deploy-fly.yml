@@ -19,6 +19,6 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
           flyctl deploy \
-            --name traffic-sign-api \
+            --app traffic-sign-api \
             --image ghcr.io/${{ github.repository }}:latest \
             --config fly.toml
