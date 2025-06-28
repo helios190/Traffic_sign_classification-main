@@ -13,7 +13,7 @@ ignore = [
   "F401",          # unused import
   "F821"           # undefined name
 ]
-fix = true         # auto-fix yang bisa
+fixable = "all"
 
 # (opsional) formatter behaviour
 [format]
