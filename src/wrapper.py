@@ -8,6 +8,7 @@ import cv2
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.security import SecurityMiddleware
 from pydantic import BaseModel
 
 from .loader import ModelLoader  
