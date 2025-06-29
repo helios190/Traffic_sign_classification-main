@@ -7,10 +7,13 @@ import numpy as np
 import cv2
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .loader import ModelLoader   # your universal loader
-from .traffic import LABELS       # 43 human-readable labels
+from .loader import ModelLoader  
+from .traffic import LABELS    
+
+
 
 #────────────────────── Config ─────────────────────────────
 # Point directly at your TFLite file (adjust relative path if needed)
@@ -20,6 +23,22 @@ ART_PATH = Path(__file__).resolve().parent.parent / "models/v2025-06-27/model_in
 _loader: ModelLoader | None = None
 
 app = FastAPI(title="Traffic-Sign API", version="1.0")
+
+# 1) CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],            # or list your allowed origins
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],  # only the methods you need
+    allow_headers=["*"],            # your client may need e.g. Authorization
+)
+
+# 2) Security (CSP) middleware
+app.add_middleware(
+    SecurityMiddleware,
+    content_security_policy="default-src 'none'; img-src 'self'; connect-src 'self' https://traffic-sign-api.fly.dev; frame-ancestors 'none';",
+    # you can add more directives here, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+)
 
 
 class PredictResponse(BaseModel):

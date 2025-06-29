@@ -1,8 +1,6 @@
 # src/loader.py
 from pathlib import Path
 import numpy as np
-
-# Try to use the lightweight tflite-runtime if available
 try:
     from tflite_runtime.interpreter import Interpreter as TFLiteInterpreter
     TF_LITE = True
@@ -12,9 +10,8 @@ except ImportError:
 class ModelLoader:
     def __init__(self, artefact: str | Path):
         self.path = Path(artefact)
-        # if we’ll need tf, import it here
         if not TF_LITE:
-            import tensorflow as tf  # noqa: F401
+            import tensorflow as tf
         self.backend, self.obj = self._load()
 
     def _load(self):
@@ -55,7 +52,6 @@ class ModelLoader:
 
         if self.backend == "tflite":
             interp = self.obj
-            # try signature runner first
             sig_map = interp.get_signature_list()
             def _maybe_quantize(a, dtype):
                 return (a * 255).astype("uint8") if dtype == np.uint8 else a.astype("float32")
