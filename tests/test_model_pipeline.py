@@ -7,7 +7,7 @@ from src.loader import ModelLoader
 
 # Path ke artefak model di repo kamu
 ROOT = Path(__file__).resolve().parents[1]
-H5_PATH     = ROOT / "Traffic.h5"
+H5_PATH     = ROOT / "models" / "v2025-06-27" / "baseline.h5"
 TFLITE_PATH = ROOT / "models" / "v2025-06-27" / "model_int8.tflite"
 
 @pytest.fixture

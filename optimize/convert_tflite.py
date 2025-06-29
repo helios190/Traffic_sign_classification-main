@@ -17,7 +17,7 @@ if not SM_DIR.exists():
     sys.exit(f"[ERR] SavedModel tidak ditemukan: {SM_DIR}")
 
 SAMPLES = list(pathlib.Path("test").glob("*.png"))
-REP_N = min(20, len(SAMPLES))     # ganti 20 sesuai aset Anda
+REP_N = min(2, len(SAMPLES))     # ganti 20 sesuai aset Anda
 
 def representative_dataset():
     for path in random.sample(SAMPLES, REP_N):

@@ -41,6 +41,7 @@ class PredictResponse(BaseModel):
 
 
 def _preprocess(content: bytes) -> np.ndarray:
+    """bytes → NHWC float32[1,30,30,3]"""
     arr = np.frombuffer(content, np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img is None:
@@ -109,4 +110,3 @@ if __name__ == "__main__":
         port=port,
         log_level="info",
     )
-
