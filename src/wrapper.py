@@ -8,7 +8,6 @@ import cv2
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.security import SecurityMiddleware
 from pydantic import BaseModel
 
 from .loader import ModelLoader  
@@ -32,13 +31,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST"],  # only the methods you need
     allow_headers=["*"],            # your client may need e.g. Authorization
-)
-
-# 2) Security (CSP) middleware
-app.add_middleware(
-    SecurityMiddleware,
-    content_security_policy="default-src 'none'; img-src 'self'; connect-src 'self' https://traffic-sign-api.fly.dev; frame-ancestors 'none';",
-    # you can add more directives here, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
 )
 
 
