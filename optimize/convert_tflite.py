@@ -40,3 +40,5 @@ converter.inference_output_type = tf.uint8
 
 OUT_PATH.write_bytes(converter.convert())
 print("✅  model_int8.tflite sukses ditulis →", OUT_PATH)
+
+
