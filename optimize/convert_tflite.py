@@ -1,10 +1,3 @@
-"""
-convert_tflite.py
-=================
-Membuat model_int8.tflite dari SavedModel di
-models/<versi>/savedmodel
-"""
-
 import pathlib
 import random
 import sys
