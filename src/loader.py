@@ -11,26 +11,23 @@ class ModelLoader:
     def __init__(self, artefact: str | Path):
         self.path = Path(artefact)
         if not TF_LITE:
-            import tensorflow as tf
+            import tensorflow as tf  # for CPU fallback interpreter
         self.backend, self.obj = self._load()
 
     def _load(self):
         suffix = self.path.suffix.lower()
 
         if suffix == ".h5":
-            # keras H5
             import tensorflow as tf
             model = tf.keras.models.load_model(self.path, compile=False)
             return "keras", model
 
         if self.path.is_dir():
-            # saved_model dir
             import tensorflow as tf
             saved = tf.saved_model.load(str(self.path))
             return "saved", saved
 
         if suffix == ".tflite":
-            # TFLite file
             if TF_LITE:
                 itp = TFLiteInterpreter(model_path=str(self.path))
             else:
@@ -43,39 +40,50 @@ class ModelLoader:
 
     def predict_logits(self, arr: np.ndarray):
         if self.backend == "keras":
+            # H5 model: returns float32 logits directly
             return self.obj.predict(arr, verbose=0)
-
-        if self.backend == "saved":
-            import tensorflow as tf
-            fn = self.obj.signatures["serving_default"]
-            return fn(tf.constant(arr))["output_0"].numpy()
 
         if self.backend == "tflite":
             interp = self.obj
-            sig_map = interp.get_signature_list()
-            def _maybe_quantize(a, dtype):
-                return (a * 255).astype("uint8") if dtype == np.uint8 else a.astype("float32")
+            # 1) Retrieve tensor details
+            in_detail = interp.get_input_details()[0]
+            out_detail = interp.get_output_details()[0]
 
-            def _first_name(c):
-                if isinstance(c, dict):
-                    return next(iter(c.values()))
-                if isinstance(c, (list, tuple)):
-                    return c[0]
-                raise TypeError
+            # 2) Quantization parameters
+            scale_in, zp_in = in_detail.get('quantization', (0.0, 0))
+            dtype_in = in_detail['dtype']
+            scale_out, zp_out = out_detail.get('quantization', (0.0, 0))
 
-            if isinstance(sig_map, dict) and sig_map:
-                key = next(iter(sig_map))
-                runner = interp.get_signature_runner(key)
-                in_name = _first_name(sig_map[key]["inputs"])
-                out_name = _first_name(sig_map[key]["outputs"])
-                in_dtype = interp.get_input_details()[0]["dtype"]
-                return runner(**{in_name: _maybe_quantize(arr, in_dtype)})[out_name]
+            # 3) Quantize input if model expects integers
+            if scale_in and zp_in and np.issubdtype(dtype_in, np.integer):
+                arr_q = np.clip(
+                    np.round(arr / scale_in) + zp_in,
+                    np.iinfo(dtype_in).min,
+                    np.iinfo(dtype_in).max
+                ).astype(dtype_in)
             else:
-                # fallback
-                inp = interp.get_input_details()[0]
-                out = interp.get_output_details()[0]["index"]
-                interp.set_tensor(inp["index"], _maybe_quantize(arr, inp["dtype"]))
-                interp.invoke()
-                return interp.get_tensor(out)
+                arr_q = arr.astype(dtype_in)
 
-        raise RuntimeError(f"backend unknown: {self.backend!r}")
+            # 4) Run inference
+            interp.set_tensor(in_detail['index'], arr_q)
+            interp.invoke()
+
+            # 5) Get raw output and dequantize if needed
+            out_q = interp.get_tensor(out_detail['index'])
+            if scale_out and zp_out and np.issubdtype(out_q.dtype, np.integer):
+                out = (out_q.astype(np.float32) - zp_out) * scale_out
+            else:
+                out = out_q.astype(np.float32)
+
+            return out
+
+        if self.backend == "saved":
+            # SavedModel: use default signature
+            import tensorflow as tf
+            fn = self.obj.signatures['serving_default']
+            # TensorFlow SavedModel signature outputs tensors
+            result = fn(tf.constant(arr))
+            # Assume single output
+            return next(iter(result.values())).numpy()
+
+        raise RuntimeError(f"Unknown backend: {self.backend!r}")

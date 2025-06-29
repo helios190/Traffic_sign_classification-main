@@ -8,19 +8,9 @@ import sys
 import numpy as np
 import cv2
 from .loader import ModelLoader
+from src.loader import LABELS
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-
-LABELS = [
-    "Speed 20","Speed 30","Speed 50","Speed 60","Speed 70","Speed 80","End 80",
-    "Speed 100","Speed 120","No passing", "No passing 3.5t", "Right-of-way",
-    "Priority", "Yield", "Stop", "No vehicles", "No >3.5t", "No entry",
-    "Caution", "Curve L", "Curve R", "Double curve", "Bumpy", "Slippery",
-    "Narrow", "Road work", "Signals", "Pedestrian", "Children", "Bicycle",
-    "Ice", "Animals", "End limit", "Turn R", "Turn L", "Ahead", "Straight/R",
-    "Straight/L", "Keep R", "Keep L", "Roundabout", "End nopass",
-    "End nopass 3.5t"
-]
 
 # ─────────────────────────────────────────────────────────────
 def first_name(obj):
@@ -93,10 +83,8 @@ def main():
     artefacts = {
         "h5"  : ver_dir / "baseline.h5",
         "int8": ver_dir / "model_int8.tflite",
-        "fp16": ver_dir / "model_fp16.onnx",
     }
 
-    # bangun fungsi prediksi utk artefak yg ada
     fns = {k: build_predict(p) for k, p in artefacts.items() if p.exists()}
 
     imgs, names = load_imgs(ROOT / args.test_dir)
