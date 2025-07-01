@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import cv2
 from .loader import ModelLoader
-from src.loader import LABELS
+from src.traffic import LABELS
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 

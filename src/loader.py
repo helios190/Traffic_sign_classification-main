@@ -1,7 +1,5 @@
 from pathlib import Path
 import numpy as np
-
-# Prefer the lightweight TFLite runtime if it’s installed
 try:
     from tflite_runtime.interpreter import Interpreter
     TF_LITE = True
