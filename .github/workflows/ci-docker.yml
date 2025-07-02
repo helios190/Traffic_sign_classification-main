@@ -24,7 +24,7 @@ jobs:
       - name: Install ruff
         run: python -m pip install --quiet ruff
       - name: Run ruff 
-        run: ruff check.
+        run: ruff check
 
 #-----2) ----Test
   test:
