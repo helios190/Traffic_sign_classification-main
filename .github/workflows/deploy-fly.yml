@@ -17,7 +17,7 @@ jobs:
 
       # → template your fly.toml with the GHCR creds
       - name: Write fly.toml 
-        run:
+        run: |
           cat > fly-toml <<EOF
           app = "traffic-sign-api"
           primary_region = "sin"
