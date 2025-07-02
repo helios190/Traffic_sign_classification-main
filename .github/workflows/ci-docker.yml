@@ -29,7 +29,9 @@ jobs:
 #-----2) ----Test
 test:
   needs: lint 
-  runs-on: ubuntu-22.04-
+  runs-on: ubuntu-22.04
+  steps:
+    - uses: actions/checkout@v4
     - uses: actions/setup-python@v5 
       with:
         python-version: "3.11"
@@ -62,8 +64,8 @@ test:
       - uses: docker/build-push-action@v5 
         with:
           context: .
-          • push: true 
-            platforms: linux/amd64
+          push: true 
+          platforms: linux/amd64
           tags: |
             ${{ env.REGISTRY }}/${{ steps.prep.outputs.repo }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ steps.prep.outputs.repo }}: latest 
