@@ -26,8 +26,8 @@ jobs:
             image = "ghcr.io/${{ github.repository }}:latest"
 
           [registry]
-            username = "${{ github,actor }}"
-            password = "${{ secrets. GHCR_TOKEN }}"
+            username = "${{ github.actor }}"
+            password = "${{ secrets.GHCR_TOKEN }}"
         
           [env]
             ARTEFACT_PATH    = "Traffic.h5"
