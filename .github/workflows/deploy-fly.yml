@@ -30,7 +30,7 @@ jobs:
             password = "${{ secrets.GHCR_TOKEN }}"
         
           [env]
-            ARTEFACT_PATH    = "Traffic.h5"
+            ARTEFACT_PATH    = "models/v2025-06-27/model_int8.tflite"
             PYTHONUNBUFFERED = "1"
 
           [http_service]
